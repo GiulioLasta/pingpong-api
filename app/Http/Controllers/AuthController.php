@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 
@@ -24,12 +25,17 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
+    public function login(Request $request)
     {
+        $request->validate([
+            'email' => 'required',
+            'password' => 'required'
+        ]);
+
         $credentials = request(['email', 'password']);
 
         if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['errors' => 'Unauthorized'], 401);
+            return response()->json(['errors' => ['result'=>'Unauthorized']], 401);
         }
 
         return $this->respondWithToken($token);
@@ -41,8 +47,14 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function register()
+    public function register(Request $request)
     {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required',
+            'password' => 'required|confirmed'
+        ]);
+
         User::create([
             'name' => request('name'),
             'email' => request('email'),
@@ -60,6 +72,18 @@ class AuthController extends Controller
     public function me()
     {
         return response()->json(auth()->user());
+    }
+
+    /**
+     * update the user info
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request)
+    {
+        auth()->user()->update($request->all());
+
+        return response('update');
     }
 
     /**
